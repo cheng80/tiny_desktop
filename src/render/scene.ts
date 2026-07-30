@@ -354,6 +354,8 @@ export interface Frame {
   readonly weather: WeatherState;
   /** 설정 패널이 열려 있는지 */
   readonly settingsOpen: boolean;
+  /** 도움말이 열려 있는지. 버튼을 눌린 모양으로 그린다 */
+  readonly helpOpen: boolean;
 }
 
 export function drawScene(
@@ -394,6 +396,32 @@ export function drawScene(
     size: 11,
   });
   drawGrowthBar(context, state);
+
+  // 도움말. 원형 버튼 타일 위에 물음표를 픽셀로 직접 찍는다. 8px 글꼴로는 이 크기에서
+  // 물음표가 뭉개져 보인다.
+  const help = HEADER.help;
+  drawTile(
+    context,
+    sheets.ui,
+    frame.helpOpen ? ROUND_BUTTON.active : ROUND_BUTTON.idle,
+    help.x,
+    help.y,
+  );
+  // 5x7 자리에 찍는다. 원형 타일의 밝은 안쪽이 대략 3..12 이므로 4행부터 시작해야
+  // 위쪽 테두리에 물음표 머리가 붙지 않는다.
+  const markX = help.x + 6;
+  const markY = help.y + 4;
+  const helpMarks: readonly Rect[] = [
+    { x: markX + 1, y: markY, width: 3, height: 1 },
+    { x: markX, y: markY + 1, width: 1, height: 1 },
+    { x: markX + 4, y: markY + 1, width: 1, height: 1 },
+    { x: markX + 4, y: markY + 2, width: 1, height: 1 },
+    { x: markX + 2, y: markY + 3, width: 2, height: 1 },
+    { x: markX + 2, y: markY + 4, width: 1, height: 1 },
+    { x: markX + 2, y: markY + 6, width: 1, height: 1 },
+  ];
+  helpMarks.forEach((mark) => fillRect(context, mark, COLORS.ink));
+
   drawTile(context, sheets.ui, ROUND_BUTTON.idle, HEADER.fold.x, HEADER.fold.y);
   // 프레임 없는 창이라 macOS 최소화 버튼이 없다. 짧은 선으로 미니 전환을 표시한다.
   fillRect(

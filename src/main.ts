@@ -65,6 +65,7 @@ import {
 } from "./render/layout";
 import { MINI_HEIGHT as MINI_VIEW_HEIGHT, MINI_WIDTH as MINI_VIEW_WIDTH } from "./render/mini";
 import { buttonStates, critterKindsFor, drawScene, PEOPLE_KINDS } from "./render/scene";
+import { drawHelp, hitHelp } from "./render/helpPanel";
 import {
   drawConfirm,
   drawSettings,
@@ -98,6 +99,9 @@ interface PendingConfirm {
   readonly accept: () => void;
 }
 let pendingConfirm: PendingConfirm | null = null;
+
+/** 도움말이 열려 있으면 보고 있는 장 번호, 닫혀 있으면 null */
+let helpPage: number | null = null;
 let foldingMain = false;
 let weather: WeatherState = disabledWeather();
 let weatherNextAttemptAt = 0;
@@ -458,9 +462,28 @@ function onPointerDown(event: PointerEvent): void {
     return;
   }
 
+  // 도움말을 보는 동안에는 뒤쪽이 눌리지 않는다. 읽다가 밭을 건드리면 당황한다.
+  if (helpPage !== null) {
+    const action = hitHelp(point.x, point.y, helpPage);
+    if (action.kind === "close") {
+      helpPage = null;
+    } else if (action.kind === "next") {
+      helpPage += 1;
+    } else if (action.kind === "prev") {
+      helpPage -= 1;
+    }
+    return;
+  }
+
   // 설정 패널이 열려 있어도 접기 버튼은 즉시 동작한다.
   if (hitTest(HEADER.fold, point.x, point.y)) {
     void foldMain();
+    return;
+  }
+
+  if (hitTest(HEADER.help, point.x, point.y)) {
+    helpPage = 0;
+    settingsOpen = false;
     return;
   }
 
@@ -605,10 +628,13 @@ function renderFrame(timestamp: number): void {
     light: daylight(new Date(wallNow)),
     weather,
     settingsOpen,
+    helpOpen: helpPage !== null,
   });
 
   if (pendingConfirm !== null) {
     drawConfirm(viewport.context, sheets, pendingConfirm.view);
+  } else if (helpPage !== null) {
+    drawHelp(viewport.context, sheets, helpPage);
   } else if (settingsOpen) {
     drawSettings(viewport.context, sheets, settings, locationPermission);
   }

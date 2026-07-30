@@ -201,6 +201,8 @@ export const HEADER = {
    * 글자 옆에 짧게 두면 잘린 것처럼 보여서 머리말과 전경을 나누는 줄로 쓴다.
    */
   bar: { x: SCENE_X, y: 30, width: SCENE_WIDTH, height: 4 } as Rect,
+  /** 도움말. 접기·설정과 같은 줄 왼쪽에 둔다 */
+  help: { x: VIEW_WIDTH - 62, y: 8, width: TILE_SIZE, height: TILE_SIZE } as Rect,
   fold: { x: VIEW_WIDTH - 42, y: 8, width: TILE_SIZE, height: TILE_SIZE } as Rect,
   gear: { x: VIEW_WIDTH - 22, y: 8, width: TILE_SIZE, height: TILE_SIZE } as Rect,
 } as const;
@@ -241,8 +243,8 @@ export const FOOTER = {
   ] as readonly Rect[],
 } as const;
 
-/** 누르면 창이 끌리는 영역. 접기와 톱니 버튼은 제외한다 */
-export const DRAG_ZONE: Rect = { x: 0, y: 0, width: HEADER.fold.x - 2, height: SCENE_Y - 2 };
+/** 누르면 창이 끌리는 영역. 도움말·접기·톱니 버튼은 제외한다 */
+export const DRAG_ZONE: Rect = { x: 0, y: 0, width: HEADER.help.x - 2, height: SCENE_Y - 2 };
 
 export function hitTest(rect: Rect, x: number, y: number): boolean {
   return x >= rect.x && x < rect.x + rect.width && y >= rect.y && y < rect.y + rect.height;

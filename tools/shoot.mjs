@@ -168,6 +168,22 @@ const SCENARIOS = [
     openSettings: true,
     state: makeState({ stages: [1, 2, 3, 2], coins: 100, storage: 6 }),
   },
+  // 도움말은 글이 잘리는지 눈으로 봐야 하므로 일곱 장을 모두 찍는다.
+  ...[
+    "1-intro",
+    "2-harvest",
+    "3-coins",
+    "4-expand",
+    "5-weather",
+    "6-window",
+    "7-away",
+  ].map((label, page) => ({
+    name: `${19 + page}-help-${label}`,
+    hour: 10,
+    view: "main",
+    helpPage: page,
+    state: makeState({ stages: [1, 2, 3, 2], coins: 100, storage: 6 }),
+  })),
   {
     name: "09-mini-day-rain",
     hour: 12,
@@ -339,6 +355,17 @@ async function main() {
       // 톱니 버튼은 논리 좌표 기준 오른쪽 위. CSS 좌표로 환산해 누른다.
       await page.mouse.click(MAIN_VIEWPORT.width - 28, 26);
       await page.waitForTimeout(400);
+    }
+
+    if (typeof scenario.helpPage === "number") {
+      // 물음표 버튼은 톱니에서 왼쪽으로 두 칸(논리 40px, CSS 80px) 떨어져 있다.
+      await page.mouse.click(MAIN_VIEWPORT.width - 108, 26);
+      await page.waitForTimeout(400);
+      // `다음`을 눌러 원하는 장까지 넘긴다. 버튼은 패널 아래쪽 가운데 오른쪽.
+      for (let step = 0; step < scenario.helpPage; step += 1) {
+        await page.mouse.click(MAIN_VIEWPORT.width / 2 + 64, 452);
+        await page.waitForTimeout(250);
+      }
     }
 
     const file = path.join(out, `${scenario.name}.png`);
