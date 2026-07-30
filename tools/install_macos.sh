@@ -24,7 +24,16 @@
 set -o pipefail
 
 APP_NAME="Tiny Farm.app"
-BUILT="src-tauri/target/release/bundle/macos/$APP_NAME"
+# 기본은 universal 이다. Apple Silicon 과 인텔 맥 모두에서 실행되어야 배포본 하나로 끝난다.
+# 로컬에서 빨리 돌려보고 싶으면 TINY_FARM_TARGET=native 로 현재 아키텍처만 빌드한다.
+TARGET="${TINY_FARM_TARGET:-universal-apple-darwin}"
+if [ "$TARGET" = "native" ]; then
+  BUILD_ARGS=()
+  BUILT="src-tauri/target/release/bundle/macos/$APP_NAME"
+else
+  BUILD_ARGS=(--target "$TARGET")
+  BUILT="src-tauri/target/$TARGET/release/bundle/macos/$APP_NAME"
+fi
 INSTALLED="/Applications/$APP_NAME"
 BUNDLE_ID="app.tinyfarm.widget"
 LSREGISTER=/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Support/lsregister
@@ -68,8 +77,8 @@ if pkill -f "/$APP_NAME/Contents/MacOS/app" >/dev/null 2>&1; then
 fi
 
 # 3) 빌드
-log "=== tauri build ==="
-npx tauri build --bundles app >> "$out" 2>&1
+log "=== tauri build (target=$TARGET) ==="
+npx tauri build "${BUILD_ARGS[@]+"${BUILD_ARGS[@]}"}" --bundles app >> "$out" 2>&1
 build_exit=$?
 log "build_exit=$build_exit"
 if [ "$build_exit" -ne 0 ]; then
@@ -104,6 +113,22 @@ log "requirement=$requirement"
 
 authority=$(codesign -dvvv "$INSTALLED" 2>&1 | awk -F= '/^Authority=/ {print $2; exit}')
 log "authority=${authority:-none}"
+
+# 실제로 두 아키텍처가 들어갔는지 확인한다. universal 을 요청했는데 한쪽만 들어가면
+# 인텔 맥에서 실행되지 않고, 그 사실을 배포한 뒤에야 알게 된다.
+archs=$(lipo -archs "$INSTALLED/Contents/MacOS/app" 2>&1)
+log "architectures=$archs"
+if [ "$TARGET" = "universal-apple-darwin" ]; then
+  case "$archs" in
+    *x86_64*arm64* | *arm64*x86_64*)
+      log "OK: universal 바이너리다. 인텔 맥에서도 실행된다."
+      ;;
+    *)
+      log "주의: universal 을 요청했는데 아키텍처가 '$archs' 다."
+      log "      rustup target add x86_64-apple-darwin 을 확인한다."
+      ;;
+  esac
+fi
 
 case "$requirement" in
   *"identifier \"$BUNDLE_ID\""*certificate*)

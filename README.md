@@ -26,6 +26,22 @@ npm run install:macos
 `install:macos`가 빌드, 서명, `/Applications` 설치, LaunchServices 등록, 서명 검증,
 실행까지 한 번에 한다.
 
+기본은 universal 빌드다. Apple Silicon과 인텔 맥 모두에서 실행된다. 두 아키텍처를 모두
+컴파일하므로 시간이 두 배쯤 걸리고, 끝나면 `lipo`로 실제로 둘 다 들어갔는지 확인한다.
+빌드 결과가 한쪽만 담고 있으면 인텔 맥에서 실행되지 않고 그 사실을 배포 후에야 알게 된다.
+
+x86_64 타깃이 없으면 먼저 추가한다.
+
+```bash
+rustup target add x86_64-apple-darwin
+```
+
+개발 중 빠르게 돌려볼 때는 현재 아키텍처만 빌드한다.
+
+```bash
+TINY_FARM_TARGET=native npm run install:macos
+```
+
 ### 서명이 왜 필요한가
 
 서명 없이 빌드하면 macOS가 매 빌드마다 이 앱을 다른 앱으로 취급해 위치 권한이 초기화된다.
