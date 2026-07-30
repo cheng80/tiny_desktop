@@ -1,0 +1,28 @@
+{
+  "name": "tiny-farm",
+  "version": "0.1.0",
+  "description": "느긋하게 지켜보는 픽셀 농장 데스크테리어 위젯",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "tauri": "tauri",
+    "verify": "bash tools/verify.sh",
+    "install:macos": "bash tools/install_macos.sh",
+    "shoot": "node tools/shoot.mjs --out tmp/shots",
+    "icons": "node tools/make_icons.mjs"
+  },
+  "keywords": [],
+  "devDependencies": {
+    "@tauri-apps/cli": "2.11.4",
+    "playwright": "1.62.0",
+    "typescript": "7.0.2",
+    "vite": "8.1.5"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "2.11.1"
+  }
+}

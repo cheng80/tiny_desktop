@@ -1,0 +1,39 @@
+# 의존성
+node_modules/
+
+# 빌드 산출물
+dist/
+src-tauri/target/
+
+# 검증용 임시 산출물과 진단 기록. tools/verify.sh 가 만든다
+tmp/
+
+# 코드 리뷰 도구 산출물
+semantic-review/
+
+# 원본 자원. 저장소에 넣지 않는다.
+# 폰트는 파일 재배포가 금지되어 있고, Kenney 원본 팩은 개별 타일 800여 개라
+# 빌드에 필요하지 않다. 앱이 읽는 시트만 public/tiles 에 둔다.
+# 받는 방법은 assets/README.md 에 적었다.
+# 디렉터리 자체를 막으면 안쪽 파일을 되살릴 수 없어 `assets/*` 로 적는다.
+assets/*
+!assets/README.md
+
+# 폰트 실물. assets/README.md 를 보고 각자 배치한다.
+public/fonts/
+
+# 자격 증명과 서명 재료.
+# 애플 공증에 쓰는 앱 암호는 키체인 프로파일에 두고 저장소에는 두지 않는다.
+# 인증서와 키가 실수로 들어오면 서명 주체를 도용당할 수 있어 확장자로 먼저 막는다.
+.env
+.env.*
+*.p12
+*.pem
+*.key
+*.cer
+*.certSigningRequest
+*.mobileprovision
+*.provisionprofile
+
+# macOS
+.DS_Store

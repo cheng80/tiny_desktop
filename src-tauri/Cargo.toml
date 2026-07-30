@@ -1,0 +1,31 @@
+[package]
+name = "app"
+version = "0.1.0"
+description = "느긋하게 지켜보는 픽셀 농장 데스크테리어 위젯"
+authors = ["cheng80"]
+license = ""
+repository = ""
+edition = "2021"
+rust-version = "1.77.2"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+cc = "=1.2.27"
+tauri-build = { version = "2.6.3", features = [] }
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+log = "0.4"
+# macos-private-api 는 일부러 쓰지 않는다. 투명 창을 쓰려면 그 기능이 필요하지만 private
+# API 라서 App Store 심사를 통과할 수 없다. 화면을 창 전체가 불투명하게 나오도록 그려서
+# 투명 창 자체를 없앴다. tools/check_opacity.mjs 가 투명 픽셀 0개를 검증한다.
+tauri = { version = "2.11.3", features = ["tray-icon"] }
+tauri-plugin-log = "2"
+# 같은 앱이 두 번 실행되면 농장 시계가 두 벌 돌고 같은 저장 파일을 서로 덮어쓴다.
+tauri-plugin-single-instance = "2"
