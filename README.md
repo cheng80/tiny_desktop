@@ -80,6 +80,9 @@ TINY_FARM_NOTARY_PROFILE=<프로파일> npm run install:macos
 공증은 조건이 맞을 때만 실행된다. 프로파일이 없거나 Developer ID 서명이 아니면 이유를
 남기고 건너뛴다.
 
+인증서 발급부터 공증까지의 준비 과정, 무엇이 바뀌면 macOS가 다른 앱으로 취급하는지,
+인증서 만료 시 대응은 [docs/macos-signing.md](docs/macos-signing.md)에 정리했다.
+
 ## 폰트
 
 픽셀 글꼴 PF스타더스트 3.0을 쓴다. 파일 재배포가 금지된 폰트라 저장소에 포함하지 않는다.
@@ -174,6 +177,7 @@ src-tauri/      Rust. 창 관리, 트레이, 파일 저장
   src/loginitem.m   SMAppService 로그인 항목 등록
 tools/          검증, 설치, 아이콘 생성 스크립트
 public/tiles/   앱이 읽는 타일 시트
+docs/           서명과 공증 준비 문서
 .kiro/specs/    설계 문서와 구현 체크리스트
 ```
 
