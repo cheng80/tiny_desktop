@@ -1,28 +1,26 @@
 # Focus Farm 구현 체크리스트
 
-마지막 갱신: 2026-07-30 20:0x (위치 실기 성공, 로그인 항목 권한 처리 추가 반영)
+마지막 갱신: 2026-07-31 03:0x (도움말 추가, 공증 완료, 서명 문서화 반영)
 
 이 문서를 구현 완료 여부의 단일 기준으로 사용한다. 빌드 성공이나 API 호출 성공만으로는 완료 처리하지 않으며, 각 항목의 코드·자동 검증·macOS 실기 증거가 모두 확인된 뒤에만 `[x]`로 바꾼다.
 
 ## 현재 상태
 
-요약: **코드 구현은 전부 완료**. 자동 검증과 위치 실기까지 통과했고, 남은 것은 최신 코드로 릴리스 1회 재빌드 + 로그인 항목·초기화·미니 실기 3건이다.
+요약: **코드·검증·서명·공증·배포 반영까지 완료**. 남은 것은 사용자 클릭이 필요한 위치 권한 재확인 1건이다.
 
-- 자동 검증: `verify_exit=0`, TypeScript·Vite·Cargo·preview HTTP·18개 스크린샷 시나리오 통과
+- 자동 검증: `verify_exit=0`, TypeScript·Vite·Cargo·preview HTTP·**25개** 스크린샷 시나리오 통과
 - 장식 시각 검증: 메인 0·1·2·8, 미니 0·2 모두 통과
 - 위치 실기 성공: 실제 프롬프트 표시 → 허용 → 설정 패널 `위치 권한: 허용`, 메인 헤더 `맑음 26° · 0.0mm`
 - 실제 Open-Meteo 캐시 확인: `tiny-farm-weather` = `temperatureC 26.3`, `sourceTime 2026-07-30T19:30`, `weatherCode 0`. 좌표는 저장되지 않음
 - 코드 감사 결함 4건 수정 완료: LaunchAgent lint 선행·구조 검증, `bootout` 실패 전파, 초기화 저장 직렬화, 백업 복구
-- 로그인 실행은 TCC 권한이 아님을 실기로 확인하고, launchd `disabled` 플래그 처리와 `로그인 항목` 버튼을 추가함
-- 마지막 릴리스 빌드(19:39:33)는 로그인 항목 변경 이전 코드다. 최종 재빌드가 남아 있다
+- 로그인 실행은 TCC 권한이 아님을 실기로 확인하고, SMAppService 로 전환해 시스템 설정 로그인 항목 목록 노출까지 확인
+- 릴리스: universal(`x86_64 arm64`) + Developer ID 서명 + 공증 `Accepted` + `stapler` 부착 완료. `/Applications/Tiny Farm.app`
+- Git: `6045df3` 까지 푸시 완료, 워크트리 클린. 원격 `github.com/cheng80/tiny_desktop`
 
 ### 남은 작업
 
-1. 최신 코드로 `npm run tauri -- build --bundles app` 1회 재빌드
-2. 로그인 시 실행 실기: 토글 ON → plist·`launchctl print`·`print-disabled` 일치 → 앱 종료 후 재실행 → 토글 동기화 → OFF 확인
-3. 농장 초기화 실기: 트레이 초기화 취소(불변) / 확인(백업+새 농장)
-4. 미니 실기: 같은 날씨 snapshot 표시와 `열기` 후 메인 복귀
-5. 임시 진단 파일·중복 프로세스 정리 후 증거 표 마감
+1. 서명 주체가 Apple Development → Developer ID 로 바뀌어 DR 이 달라졌으므로 위치 권한이 한 번 초기화된다. 새 앱에서 프롬프트를 **사용자가 직접 허용**한 뒤 실제 날씨 수신을 재확인한다. macOS 가 시스템 대화상자의 자동 클릭을 차단하므로 이 단계는 대행할 수 없다.
+2. (배포 시점) `TINY_FARM_SELFTEST` 와 `autostart.log` 는 유지로 결정했다. 정식 마켓 배포를 하게 되면 그때 다시 판단한다.
 
 ## 진행 원칙
 
@@ -208,7 +206,7 @@
 - [x] `npm run typecheck` 통과.
 - [x] `npm run build` 통과.
 - [x] `cargo check` 통과.
-- [x] `npm run verify` 전체 통과: `verify_exit=0`, 18개 시나리오 `SHOOT OK`, 권한 3버튼 추가 후 회귀 없음.
+- [x] `npm run verify` 전체 통과: `verify_exit=0`, 25개 시나리오 `SHOOT OK`, 권한 3버튼·도움말 7장 추가 후 회귀 없음.
 - [x] macOS 릴리스 `.app` 빌드 성공: 16:05:37, 16:53:01, 19:39:33 모두 exit 0.
 - [x] 번들 Info.plist, 아이콘, 불투명 창 검증 통과.
 - [x] 최종 릴리스 재빌드·설치·서명 완료. `/Applications/Tiny Farm.app`, Apple Development 서명.
@@ -233,9 +231,24 @@
 - [x] 자동 검증: `verify_exit=0`, 18개 시나리오 통과.
 - [x] 릴리스 반영: 재빌드·설치·서명 후 실행 화면에서 배치 확인, 위치 권한·로그인 항목 유지.
 
+## 6-B. 도움말과 튜토리얼 (2026-07-31 추가)
+
+- [x] 머리말 오른쪽에 물음표 버튼을 추가했다. `HEADER.help = { x: VIEW_WIDTH - 62, ... }`, 버튼 3개 순서는 물음표·접기·톱니.
+- [x] `DRAG_ZONE.width` 를 새 버튼 앞까지 줄여 창 끌기와 클릭이 겹치지 않게 했다.
+- [x] 물음표 기호를 픽셀로 직접 찍었다. 9px 글꼴 `?` 는 16px 원형 버튼에서 뭉개졌다.
+- [x] 첫 배치가 버튼 위쪽 테두리와 겹쳐 읽히지 않던 것을 5x7 자리·안쪽 4행 시작으로 수정했다. 확대 캡처로 육안 확인.
+- [x] `src/render/helpPanel.ts` 에 7장 튜토리얼을 구현했다. 어떤 앱인가요 / 밭과 수확 / 동전 모으기 / 농장 넓히기 / 날씨와 시간 / 창 다루기 / 오래 비웠다면.
+- [x] `n / 7` 로 진행을 표시하고, 첫 장 왼쪽은 `닫기`, 마지막 장 오른쪽은 `시작` 으로 바꾼다.
+- [x] 도움말이 열려 있으면 뒤쪽 클릭을 모두 차단한다. 읽다가 밭이 눌려 수확되는 사고를 막는다.
+- [x] 안내문에서 백틱을 제거했다. 캔버스에서는 코드 표기가 그대로 글자로 찍힌다. 스크린샷 육안 검토에서 발견.
+- [x] 6장에 머리말 버튼 3개가 각각 무엇인지 설명을 넣었다.
+- [x] 자동 검증: 도움말 7장을 시나리오로 고정(`19-help-1-intro` ~ `25-help-7-away`), 전체 25개 `SHOOT OK`, `shoot_exit=0`.
+- [x] 육안 검증: 7장 모두 글자 잘림·버튼 겹침 없음. 가장 긴 줄(26자)과 최다 줄(11줄)에서도 버튼과 여백 확보.
+- [x] 릴리스 반영: `npm run install:macos` 로 universal·Developer ID 서명·공증까지 재수행.
+
 ## 7. 배포 전 남은 과제
 
-- [ ] 개발용 자체 점검 통로(`TINY_FARM_SELFTEST`)와 `autostart.log` 유지 여부 결정. → 배포 직전에 처리하기로 합의(2026-07-30).
+- [x] 개발용 자체 점검 통로(`TINY_FARM_SELFTEST`)와 `autostart.log` **유지로 결정**(2026-07-31). 아직 정식 마켓 배포가 아니라 진단 경로를 남겨 둔다. 마켓 배포를 하게 되면 그 시점에 다시 판단한다.
 - [x] 서명 전략 확정. 개발·로컬 사용은 Apple Development 인증서로 서명한다(현재 상태). 배포본만 Developer ID 서명과 공증을 쓴다. ad-hoc 은 위치 권한이 빌드마다 초기화되므로 쓰지 않는다.
 - [x] 공증 단계를 설치 스크립트에 옵션으로 넣었다. `TINY_FARM_NOTARY_PROFILE` 이 있고 Developer ID 서명일 때만 `ditto` → `notarytool submit --wait` → `stapler staple` → `spctl --assess` 를 수행한다.
 - [x] Developer ID Application 인증서 발급 완료. 해시는 저장소에 적지 않는다. 조회: `security find-identity -v -p codesigning`.
@@ -254,7 +267,13 @@
 - [x] Developer ID 서명과 공증을 실기로 완료했다. 재현 명령:
   - `APPLE_SIGNING_IDENTITY=<Developer ID 인증서 SHA-1> TINY_FARM_NOTARY_PROFILE=<프로파일> npm run install:macos`
   - 인증서는 이름이 아니라 해시로 지정한다. Apple Development 두 개가 동명이라 이름 지정은 `ambiguous` 로 실패한다.
-- [ ] 서명 주체 변경으로 위치 권한이 한 번 초기화된다. 새 앱에서 위치 프롬프트 허용 후 실제 날씨 수신 재확인.
+- [x] universal 빌드를 기본으로 바꿨다. `TARGET="${TINY_FARM_TARGET:-universal-apple-darwin}"`, `lipo -archs` 로 두 아키텍처가 실제로 들어갔는지 검사한다. 실측 `x86_64 arm64`. 인텔 맥까지 배포본 하나로 커버한다.
+- [x] 서명·공증 준비 과정을 [docs/macos-signing.md](../../../docs/macos-signing.md) 로 문서화했다. DR 개념, 준비 7단계, 확인 명령표, 무엇이 바뀌면 권한이 초기화되는지, 인증서 만료와 갱신, 문제 해결. README 에서 연결한다.
+  - 문서에 적은 값은 모두 현재 설치본 실측이다. `flags=0x10000(runtime)`, `Timestamp=Jul 31, 2026 at 2:52:56 AM`, `stapler validate` → `The validate action worked!`
+  - 인증서 SHA-1 은 문서에 적지 않는다. 맥마다 달라서 적으면 남의 환경에서 틀린다.
+- [ ] 서명 주체가 Apple Development → Developer ID 로 바뀌면서 DR 의 인증서 정책 필드가 달라졌다. 이 때문에 위치 권한이 한 번 초기화된다. 새 앱에서 프롬프트를 사용자가 직접 허용한 뒤 실제 날씨 수신을 재확인해야 한다.
+  - 팀 ID(`OU=M382EW7FD8`)는 두 인증서가 같으므로, **이번 한 번만** 초기화되고 이후 Developer ID 재빌드에서는 유지된다.
+  - macOS 가 위치 프롬프트를 보호된 시스템 대화상자로 처리해 자동 클릭을 차단한다. 대행 불가.
 
 ## 검증 증거
 
@@ -266,11 +285,21 @@
 | 실제 Open-Meteo | LocalStorage `tiny-farm-weather`: 26.3℃, `2026-07-30T19:30`, code 0, 좌표 없음 | 통과 |
 | 위치 권한 UI | 설정 패널 `위치 권한: 허용`, 버튼 3개 렌더 정상 | 통과 |
 | 메인 날씨 표시 | 헤더 `맑음 26° · 0.0mm` | 통과 |
-| 메인↔미니 실기 | 최종 빌드에서 재확인 필요 | 대기 |
+| 메인↔미니 실기 | 사용자 실기 확인: 같은 snapshot 표시, `열기` 후 메인 복귀 | 통과 |
 | 로그인 실행 권한 성격 | macOS 15.7.7: TCC 아님. `print-disabled`의 `"label" => disabled\|enabled` 확인 | 확인 |
-| LaunchAgent 생성·실행·삭제 | 코드·롤백 감사 통과, 실기 대기 | 진행 |
+| 로그인 항목 등록 | SMAppService 전환. 시스템 설정 목록에 `Tiny Farm.app` 표시, `register enabled=true` | 통과 |
+| LaunchAgent 경로 | macOS 12 이하 대체 경로. 코드·롤백 감사 통과, 전환 이전 방식으로 실기 확인 | 통과 |
 | 장식 0·1·2·8 | `tmp/shots/13...18`; 육안 비교 전 항목 PASS | 통과 |
-| 초기화 안전성 | 저장 직렬화·백업 복구까지 재감사 PASS, 실기 대기 | 진행 |
-| 최종 자동 검증 | `tmp/verify.log`: `verify_exit=0`, 18개 `OK`, `SHOOT OK`, `=== END ===` | 통과 |
-| 릴리스 빌드 | exit 0, 19:39:33 산출물; plist/icon/OPAQUE OK. 로그인 항목 변경 반영 재빌드 필요 | 진행 |
-| `127.0.0.1:5174` | `devserver_http=200`, 기존 dev server 유지 | 통과 |
+| 초기화 안전성 | 저장 직렬화·백업 복구 재감사 PASS. 실기: `state.reset-...bak` 생성 후 새 농장 | 통과 |
+| 확인창 | `window.confirm` 제거, 캔버스 확인창. 로그 `confirm accepted` → `enable ok` | 통과 |
+| 중복 실행 차단 | `tauri-plugin-single-instance`. `open -n` 3회에도 프로세스 1개 | 통과 |
+| 도움말 7장 | `tmp/shots/19-help-1-intro` ~ `25-help-7-away`; 잘림·겹침 없음 | 통과 |
+| 최종 자동 검증 | `tmp/verify.log`: 25개 `OK`, `SHOOT OK`, `shoot_exit=0`, `=== END ===` | 통과 |
+| 릴리스 빌드 | `build_exit=0`, universal `x86_64 arm64`, plist/icon/OPAQUE OK | 통과 |
+| Developer ID 서명 | `Authority=Developer ID Application: ... (M382EW7FD8)`, `TeamIdentifier=M382EW7FD8` | 통과 |
+| Hardened Runtime | `codesign -dvvv`: `flags=0x10000(runtime)` | 통과 |
+| 공증 | `status: Accepted`, `stapler validate` OK, `spctl` → `source=Notarized Developer ID` | 통과 |
+| DR 지속성 | `identifier "app.tinyfarm.widget" and ... certificate leaf[subject.OU] = M382EW7FD8` | 통과 |
+| Git 원격 | `github.com/cheng80/tiny_desktop` PUBLIC, `6045df3` 까지 푸시, 워크트리 클린 | 통과 |
+| `127.0.0.1:5174` | dev server 유지. 중간에 내려가 재기동함(`vite --port 5174 --strictPort`) | 통과 |
+| 새 서명 앱 위치 권한 | 서명 주체 변경으로 1회 초기화. 사용자 허용 클릭 필요 | 대기 |
